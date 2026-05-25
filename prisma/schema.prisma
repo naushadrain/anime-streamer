@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String  @id @default(cuid())
+  name      String?
+  email     String  @unique
+  password  String?
+  roleId    String?
+  role      Role?   @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  videos    Video[]
+  comments  Comment[]
+  likes     Like[]
+  tokens    PersonalAccessToken[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("users")
+}
+
+model PersonalAccessToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  token      String    @unique
+  abilities  String?
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@map("personal_access_tokens")
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  displayName String?
+  description String?
+  status      Boolean @default(true)
+
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model RolePermission {
+  id         String @id @default(cuid())
+
+  roleId     String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permission String
+  module     String?
+
+  canView    Boolean @default(false)
+  canCreate  Boolean @default(false)
+  canEdit    Boolean @default(false)
+  canDelete  Boolean @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([roleId, permission])
+  @@map("role_permissions")
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String
+  slug      String  @unique
+  status    Boolean @default(true)
+
+  videos    Video[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Video {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String?
+
+  videoUrl     String
+  thumbnailUrl String?
+  duration     Int?
+
+  views        Int         @default(0)
+  status       VideoStatus @default(PENDING)
+
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  comments     Comment[]
+  likes        Like[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("videos")
+}
+
+model Comment {
+  id        String @id @default(cuid())
+  text      String
+  status    Boolean @default(true)
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videoId   String
+  video     Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+model Like {
+  id        String @id @default(cuid())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  videoId   String
+  video     Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, videoId])
+  @@map("likes")
+}
+
+enum VideoStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
