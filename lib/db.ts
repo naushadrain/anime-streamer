@@ -1,18 +1,29 @@
 // lib/db.ts
+import mysql from "mysql2/promise";
 
-import { Pool } from "pg";
+export const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
 
-const globalForPg = globalThis as unknown as {
-  pgPool: Pool | undefined;
-};
+// // lib/db.ts
 
-export const db =
-  globalForPg.pgPool ??
-  new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: false,
-  });
+// import { Pool } from "pg";
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPg.pgPool = db;
-}
+// const globalForPg = globalThis as unknown as {
+//   pgPool: Pool | undefined;
+// };
+
+// export const db =
+//   globalForPg.pgPool ??
+//   new Pool({
+//     connectionString: process.env.DATABASE_URL,
+//     ssl: false,
+//   });
+
+// if (process.env.NODE_ENV !== "production") {
+//   globalForPg.pgPool = db;
+// }

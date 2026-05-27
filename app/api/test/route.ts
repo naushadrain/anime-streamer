@@ -1,31 +1,40 @@
+// app/api/test/route.ts
+
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import mysql from "mysql2/promise";
 
 export async function GET() {
   try {
-    const result = await db.query(`
-      SELECT 
-        NOW() AS server_time,
-        current_database() AS database_name,
-        current_user AS database_user
-    `);
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 3306),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
 
-    return NextResponse.json(
-      {
-        status: true,
-        message: "Database connected successfully.",
-        data: result.rows[0],
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Database connection failed:", error);
+    const [rows] = await connection.execute("SELECT 1 + 1 AS result");
+
+    await connection.end();
+
+    return NextResponse.json({
+      status: true,
+      message: "Database connection successful",
+      data: rows,
+    });
+  } catch (error: unknown) {
+    let exactError = "Unknown database error";
+
+    if (error instanceof Error) {
+      exactError = error.message;
+    }
 
     return NextResponse.json(
       {
         status: false,
-        message: "Database connection failed.",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Database connection failed",
+        error: exactError,
+        full_error: error,
       },
       { status: 500 }
     );
