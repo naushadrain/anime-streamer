@@ -3,10 +3,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +38,8 @@ type LoginModalProps = {
 };
 
 export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -46,25 +50,40 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "test@gmail.com",
+      password: "password123",
     },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      console.log("Login form data:", data);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      // Later you can call your login API here:
-      // const response = await fetch("/api/auth/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(data),
-      // });
+      const result = await response.json();
+
+      if (!response.ok || !result.status) {
+        toast.error(result.message || "Login failed");
+        return;
+      }
+
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      localStorage.setItem("roleId", result.user?.roleId || "");
+
+      toast.success("Login successful");
 
       reset();
       onOpenChange(false);
+
+      router.push("/dashboard");
     } catch (error) {
+      toast.error("Something went wrong. Please try again.");
       console.error("Login failed:", error);
     }
   };
@@ -115,7 +134,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
                     <Input
                       type="email"
-                      placeholder="superadmin@example.com"
+                      placeholder="test@gmail.com"
                       {...register("email")}
                       className="h-full border-0 bg-transparent text-white shadow-none placeholder:text-slate-500 focus-visible:ring-0"
                     />
@@ -144,7 +163,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
 
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter password"
+                      placeholder="password123"
                       {...register("password")}
                       className="h-full border-0 bg-transparent text-white shadow-none placeholder:text-slate-500 focus-visible:ring-0"
                     />
@@ -191,7 +210,7 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
                   disabled={isSubmitting}
                   className="h-14 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-base font-bold text-white shadow-lg shadow-fuchsia-500/25 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSubmitting ? "Checking..." : "LogIn"}
+                  {isSubmitting ? "Checking..." : "Login"}
                 </Button>
               </form>
             </div>
