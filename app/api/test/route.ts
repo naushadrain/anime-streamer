@@ -4,8 +4,10 @@ import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 
 export async function GET() {
+  let connection;
+
   try {
-    const connection = await mysql.createConnection({
+    connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT || 3306),
       user: process.env.DB_USER,
@@ -15,11 +17,16 @@ export async function GET() {
 
     const [rows] = await connection.execute("SELECT 1 + 1 AS result");
 
-    await connection.end();
-
     return NextResponse.json({
       status: true,
       message: "Database connection successful",
+      env_check: {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        database: process.env.DB_NAME,
+        password_loaded: Boolean(process.env.DB_PASSWORD),
+        password_length: process.env.DB_PASSWORD?.length,
+      },
       data: rows,
     });
   } catch (error: unknown) {
@@ -34,9 +41,12 @@ export async function GET() {
         status: false,
         message: "Database connection failed",
         error: exactError,
-        full_error: error,
       },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
   }
 }
