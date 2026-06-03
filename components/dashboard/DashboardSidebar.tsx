@@ -2,9 +2,11 @@
 
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  Clapperboard,
   Film,
+  ImageIcon,
   LayoutDashboard,
   MessageCircle,
   Settings,
@@ -13,19 +15,14 @@ import {
   Upload,
   Users,
   Video,
-  X,ImageIcon
+  X,
 } from "lucide-react";
 
 const sidebarItems = [
   {
     title: "Dashboard",
+    href: "/dashboard",
     icon: LayoutDashboard,
-    active: true,
-  },
-  {
-    title: "Videos",
-    icon: Video,
-    active: false,
   },
   {
     title: "Hero Sliders",
@@ -33,34 +30,39 @@ const sidebarItems = [
     icon: ImageIcon,
   },
   {
+    title: "Videos",
+    href: "/dashboard/videos",
+    icon: Video,
+  },
+  {
     title: "Categories",
+    href: "/dashboard/categories",
     icon: Film,
-    active: false,
   },
   {
     title: "Upload Video",
+    href: "/dashboard/upload-video",
     icon: Upload,
-    active: false,
   },
   {
     title: "Comments",
+    href: "/dashboard/comments",
     icon: MessageCircle,
-    active: false,
   },
   {
     title: "Users",
+    href: "/dashboard/users",
     icon: Users,
-    active: false,
   },
   {
     title: "Roles & Permissions",
+    href: "/dashboard/roles-permissions",
     icon: ShieldCheck,
-    active: false,
   },
   {
     title: "Settings",
+    href: "/dashboard/settings",
     icon: Settings,
-    active: false,
   },
 ];
 
@@ -73,6 +75,8 @@ export default function DashboardSidebar({
   sidebarOpen,
   setSidebarOpen,
 }: DashboardSidebarProps) {
+  const pathname = usePathname();
+
   return (
     <>
       {sidebarOpen && (
@@ -88,7 +92,11 @@ export default function DashboardSidebar({
         }`}
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center gap-3"
+          >
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-fuchsia-500/25">
               <img
                 src="/logo.png"
@@ -98,14 +106,10 @@ export default function DashboardSidebar({
             </div>
 
             <div>
-              <h1 className="text-xl font-black leading-none">
-                Flox Anime
-              </h1>
-              <p className="mt-1 text-xs text-slate-400">
-                Video Management
-              </p>
+              <h1 className="text-xl font-black leading-none">Flox Anime</h1>
+              <p className="mt-1 text-xs text-slate-400">Video Management</p>
             </div>
-          </div>
+          </Link>
 
           <button
             type="button"
@@ -119,20 +123,23 @@ export default function DashboardSidebar({
         <nav className="space-y-2 px-4 py-6">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
-              <button
+              <Link
                 key={item.title}
-                type="button"
+                href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
-                  item.active
+                  isActive
                     ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-fuchsia-500/20"
                     : "text-slate-400 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon className="h-5 w-5" />
                 {item.title}
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -144,9 +151,7 @@ export default function DashboardSidebar({
             </div>
 
             <div>
-              <p className="text-sm font-bold text-white">
-                Premium Studio
-              </p>
+              <p className="text-sm font-bold text-white">Premium Studio</p>
               <p className="text-xs text-slate-400">
                 Manage your anime platform
               </p>
