@@ -15,6 +15,8 @@ import ConfirmModal from "@/components/landing/ConfirmModal";
 
 import { AnimeItem } from "@/types/landing/types";
 
+const API_BASE_URL = "https://floxanimeindia.com";
+
 const genres = [
   "Action",
   "Adventure",
@@ -28,10 +30,27 @@ const genres = [
   "Slice of Life",
 ];
 
+type HeroSliderApiItem = {
+  id: string | number | null;
+  title: string;
+  description: string;
+  category: string;
+  year: string;
+  rating: string;
+  votes: string;
+  episodes: string;
+  studio: string | null;
+  director: string | null;
+  duration: string;
+  image: string;
+  status: number;
+  sort_order: number;
+};
+
 type HeroSliderApiResponse = {
   status: boolean;
   message: string;
-  data?: AnimeItem[];
+  data?: HeroSliderApiItem[];
   error?: string;
 };
 
@@ -52,20 +71,26 @@ export default function HomePage() {
     setDetailOpen(true);
   };
 
+  const normalizeImageUrl = (image: string) => {
+    if (!image) return "/logo.png";
+
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    if (image.startsWith("/")) {
+      return `${API_BASE_URL}${image}`;
+    }
+
+    return `${API_BASE_URL}/${image}`;
+  };
+
   const getHeroSliders = async () => {
     try {
       setLoading(true);
       setApiError("");
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-      if (!baseUrl) {
-        setApiError("NEXT_PUBLIC_API_BASE_URL is missing in .env file");
-        setAnimeList([]);
-        return;
-      }
-
-      const response = await fetch(`${baseUrl}/api/hero-sliders`, {
+      const response = await fetch(`${API_BASE_URL}/api/hero-sliders`, {
         method: "GET",
         cache: "no-store",
       });
@@ -78,7 +103,24 @@ export default function HomePage() {
         return;
       }
 
-      setAnimeList(result.data || []);
+      const formattedData: AnimeItem[] = (result.data || [])
+        .filter((item) => item.status === 1)
+        .map((item, index) => ({
+          id: item.id ? String(item.id) : `slider-${index + 1}`,
+          title: item.title || "Untitled",
+          description: item.description || "",
+          category: item.category || "Anime",
+          year: item.year || "",
+          rating: item.rating || "0",
+          votes: item.votes || "0",
+          episodes: item.episodes || "0",
+          studio: item.studio || null,
+          director: item.director || null,
+          duration: item.duration || "",
+          image: normalizeImageUrl(item.image),
+        }));
+
+      setAnimeList(formattedData);
     } catch (error) {
       console.error("Hero slider fetch error:", error);
       setApiError("Something went wrong while fetching hero sliders");
