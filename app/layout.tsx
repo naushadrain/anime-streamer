@@ -10,28 +10,22 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://floxanimeindia.com"),
+
   title: "Flox Anime India",
   description: "Flox Anime India - Anime video streaming and animation platform",
+
   icons: {
-    icon: [
-      {
-        url: "/logo.png",
-        type: "image/png",
-        sizes: "32x32",
-      },
-    ],
+    icon: "/logo.png",
     shortcut: "/logo.png",
-    apple: [
-      {
-        url: "/logo.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
+    apple: "/logo.png",
   },
+
   openGraph: {
     title: "Flox Anime India",
     description: "Flox Anime India - Anime video streaming and animation platform",
+    url: "https://floxanimeindia.com",
+    siteName: "Flox Anime India",
     images: [
       {
         url: "/logo.png",
@@ -40,6 +34,14 @@ export const metadata: Metadata = {
         alt: "Flox Anime India Logo",
       },
     ],
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Flox Anime India",
+    description: "Flox Anime India - Anime video streaming and animation platform",
+    images: ["/logo.png"],
   },
 };
 
